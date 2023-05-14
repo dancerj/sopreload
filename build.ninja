@@ -1,0 +1,23 @@
+cxxflags = -O2 -g --std=c++20 -Wall -Werror -I.
+ldflags = -pthread -latomic 
+gxx = g++
+gcc = gcc
+rule cc
+  command = $gxx -MMD -MF $out.d $cxxflags -c $in -o $out
+  depfile = $out.d
+  deps = gcc
+rule cclink
+  command = $gxx $in -o $out $ldflags
+rule runtest
+  command = ./$in > $out.tmp 2>&1 && mv $out.tmp $out || ( cat $out.tmp; exit 1 )
+rule ninjagenerator
+  command = ./$in
+  generator = true
+build build.ninja: ninjagenerator configure
+build configure.o: cc configure.cc
+build configure: cclink configure.o
+build out/sopreload: cclink out/elfphdr.o
+build out/hello: cclink out/hello.o
+build out/elfloader_integration_test.sh.result: runtest elfloader_integration_test.sh| out/sopreload out/hello
+build out/elfphdr.o: cc elfphdr.cc
+build out/hello.o: cc hello.cc
