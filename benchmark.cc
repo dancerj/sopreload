@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -31,7 +32,7 @@ int ForkExec(char** argv) {
   return WEXITSTATUS(status);
 }
 
-void PrintDurations(const char * label, std::vector<uint64_t> durations) {
+void PrintDurations(const char* label, std::vector<uint64_t> durations) {
   std::cout << label << std::endl;
   for (auto duration : durations) {
     std::cout << duration << " ";
@@ -54,7 +55,8 @@ int main(int argc, char** argv) {
   for (size_t i = 0; i < iterations; ++i) {
     // Note: this requires root access via sudo. Dropping page cache
     // is not usually doable from a regular user.
-    system("sudo bash -c 'echo 3 > /proc/sys/vm/drop_caches'");
+    int retval = system("sudo bash -c 'echo 3 > /proc/sys/vm/drop_caches'");
+    assert(retval == 0);
     {
       ScopedTimer t;
       ForkExec(&argv[2]);
@@ -69,7 +71,6 @@ int main(int argc, char** argv) {
 
   PrintDurations("Uncached", durations);
   PrintDurations("Cached", cached_durations);
-
 
   return 0;
 }
