@@ -30,7 +30,6 @@ int ForkExec(char** argv) {
   waitpid(child, &status, 0);
   return WEXITSTATUS(status);
 }
-}  // anonymous namespace
 
 void PrintDurations(const char * label, std::vector<uint64_t> durations) {
   std::cout << label << std::endl;
@@ -41,6 +40,7 @@ void PrintDurations(const char * label, std::vector<uint64_t> durations) {
   uint64_t sum = std::reduce(durations.begin(), durations.end());
   std::cout << "mean: " << (sum / durations.size()) << std::endl;
 }
+}  // anonymous namespace
 
 int main(int argc, char** argv) {
   if (argc <= 2) {
