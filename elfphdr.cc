@@ -35,7 +35,7 @@
 #include "threadpool.h"
 
 const int kNumThreads = 8;
-
+namespace {
 template <int ELFCLASSXX, class ElfXX_Ehdr, class ElfXX_Shdr, class ElfXX_Phdr,
           class ElfXX_Dyn>
 class ElfFile {
@@ -323,6 +323,7 @@ class LibPreloader {
       std::chrono::steady_clock::now()};
   std::unique_ptr<Threadpool> pool_{};
 };
+}  // anonymous namespace
 
 bool LoadElfFile(const char* filename) {
   LibPreloader<ELFCLASS32, Elf32_Ehdr, Elf32_Shdr, Elf32_Phdr, Elf32_Dyn> p32;
