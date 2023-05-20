@@ -18,8 +18,6 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <cassert>
 
 #include <functional>
@@ -331,36 +329,17 @@ class LibPreloader {
   std::unique_ptr<Threadpool> pool_{};
 };
 
-int main(int argc, char** argv) {
-  pid_t child;
-
-  const char* kDefault[] = {"out/elfphdr", nullptr};
-  const char** argv1 =
-      (argc >= 2) ? const_cast<const char**>(&argv[1]) : kDefault;
-  switch (child = fork()) {
-    case -1:
-      perror("fork");
-      exit(1);
-      break;
-    case 0:
-      execv(argv1[0], const_cast<char**>(argv1));
-      perror("execv");
-      exit(1);
-    default:;
-  };
-  std::cout << "Running: " << argv1[0] << std::endl;
+bool LoadElfFile(const char* filename) {
   LibPreloader<ELFCLASS32, Elf32_Ehdr, Elf32_Shdr, Elf32_Phdr, Elf32_Dyn> p32;
-  LibPreloader<ELFCLASS64, Elf64_Ehdr, Elf64_Shdr, Elf64_Phdr, Elf64_Dyn> p64;
   // std::cout << "try p32" << std::endl;
-  const char* filename = argv1[0];
-  if (!p32.loadMain(filename)) {
-    // std::cout << "try p64 as fallback" << std::endl;
-    p64.loadMain(filename);
+
+  if (p32.loadMain(filename)) {
+    return true;
   }
 
-  int status;
-  waitpid(child, &status, 0);
-  return WEXITSTATUS(status);
+  LibPreloader<ELFCLASS64, Elf64_Ehdr, Elf64_Shdr, Elf64_Phdr, Elf64_Dyn> p64;
+  // std::cout << "try p64 as fallback" << std::endl;
+  return p64.loadMain(filename);
 }
 
 /*
