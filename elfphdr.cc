@@ -14,11 +14,12 @@
     limitations under the License.
 
 */
+
+#include <assert.h>
 #include <elf.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <cassert>
 
 #include <functional>
 #include <mutex>

@@ -1,6 +1,6 @@
 #include "scoped_timer.h"
 
-#include <cassert>
+#include <assert.h>
 
 int main() {
   {
