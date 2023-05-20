@@ -292,18 +292,13 @@ class LibPreloader {
     for (const auto& path : paths_) {
       // TODO: this is lots of allocation, do I need to make it faster?
       std::string full_path = std::string(path) + "/" + std::string(name);
-      std::vector<std::string> needed;
 
-      {
-        ElfFile<ELFCLASSXX, ElfXX_Ehdr, ElfXX_Shdr, ElfXX_Phdr, ElfXX_Dyn> elf;
-        if (!elf.load_elf(full_path)) {
-          continue;
-        }
-        for (const auto a : elf.GetNeeded()) {
-          needed.emplace_back(a);
-        }
+      ElfFile<ELFCLASSXX, ElfXX_Ehdr, ElfXX_Shdr, ElfXX_Phdr, ElfXX_Dyn> elf;
+      if (!elf.load_elf(full_path)) {
+        continue;
       }
 
+      auto needed = elf.GetNeeded();
       for (const std::string_view s : needed) {
         std::string needed_s{s};
         pool_->Post([needed_s, this]() { load(needed_s); });
