@@ -24,7 +24,10 @@ int main() {
   NinjaBuilder n(c);
 
   n.CompileLink("sopreload", {"elfphdr", "sopreload"});
+  n.CompileLink("benchmark", {"benchmark"});
   n.CompileLinkRunTest("preload_only", {"elfphdr", "preload_only"});
+  n.CompileLinkRunTest("scoped_timer_test", {"scoped_timer_test"});
   n.CompileLink("hello", {"hello"});
-  n.RunTestScript("elfloader_integration_test.sh", {"out/sopreload", "out/hello"});
+  n.RunTestScript("elfloader_integration_test.sh",
+                  {"out/sopreload", "out/hello"});
 }

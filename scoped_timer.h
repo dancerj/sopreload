@@ -20,6 +20,7 @@
  * Utility class to get usecs spent.
  */
 #include <chrono>
+#include <utility>
 
 /*
   system_clock, monotonic_clock and high_resolution_clock are supposed to exist,
@@ -38,6 +39,12 @@ class ScopedTimer {
     return {
         std::chrono::duration_cast<std::chrono::microseconds>(begin_ - base),
         std::chrono::duration_cast<std::chrono::microseconds>(end - base)};
+  }
+
+  std::chrono::microseconds elapsed_msec() const {
+    std::chrono::steady_clock::time_point end =
+        std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(end - begin_);
   }
 
  private:
