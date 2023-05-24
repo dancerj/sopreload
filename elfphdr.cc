@@ -73,20 +73,26 @@ class ElfFile {
       // Try another bitness
       return false;
     }
+    // TODO: Should work if the endian matches, this assertion is
+    // wrong.
     ASSERT_EQ(data_[EI_DATA], ELFDATA2LSB);
 
     const auto& hdr = *reinterpret_cast<const ElfXX_Ehdr*>(data_);
     phdr_ = reinterpret_cast<const ElfXX_Phdr*>(data_ + hdr.e_phoff);
+    const ElfXX_Phdr* pt_dynamic = nullptr;
     for (int i = 0; i < hdr.e_phnum; i++) {
-      loadPhdr(reinterpret_cast<const ElfXX_Phdr*>(data_ + hdr.e_phoff +
-                                                   hdr.e_phentsize * i));
+      const ElfXX_Phdr* ph = reinterpret_cast<const ElfXX_Phdr*>(data_ + hdr.e_phoff +
+								 hdr.e_phentsize * i);
+      if (ph->p_type == PT_DYNAMIC) {
+	pt_dynamic = ph;
+	break;
+      }
     }
 
-    const ElfXX_Phdr* dynph = getPhdr(PT_DYNAMIC);
-    assert(dynph);
+    assert(pt_dynamic);
 
-    loadDynamicStrtab(dynph);
-    loadDynamicNeeded(dynph);
+    loadDynamicStrtab(pt_dynamic);
+    loadDynamicNeeded(pt_dynamic);
 
     return true;
   }
@@ -259,9 +265,9 @@ class LibPreloader {
     }
 
     pool_ = std::make_unique<Threadpool>(kNumThreads);
-    // std::cout << "loading " << filename << std::endl;
+
     const auto needed = elf.GetNeeded();
-    for (const auto s : needed) {
+    for (const std::string_view s : needed) {
       std::string needed_s{s};
       pool_->Post([needed_s, this]() { load(needed_s); });
     }
@@ -292,7 +298,7 @@ class LibPreloader {
 
     for (const auto& path : paths_) {
       // TODO: this is lots of allocation, do I need to make it faster?
-      std::string full_path = std::string(path) + "/" + std::string(name);
+      std::string full_path = std::string(path) + "/" + name;
 
       ElfFile<ELFCLASSXX, ElfXX_Ehdr, ElfXX_Shdr, ElfXX_Phdr, ElfXX_Dyn> elf;
       if (!elf.load_elf(full_path)) {
